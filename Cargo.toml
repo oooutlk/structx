@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "structx",
+    "structx_derive",
+    "structx_test",
+]

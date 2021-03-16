@@ -1,0 +1,12 @@
+[package]
+name = "structx_test"
+version = "0.1.0"
+authors = ["oooutlk <oooutlk@outlook.com>"]
+edition = "2018"
+publish = false
+
+[dependencies]
+structx = { path = "../structx", version = "0.1" }
+
+[package.metadata.inwelling]
+structx = true

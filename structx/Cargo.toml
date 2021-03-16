@@ -1,0 +1,18 @@
+[package]
+name = "structx"
+version = "0.1.0"
+authors = ["oooutlk <oooutlk@outlook.com>"]
+edition = "2018"
+license = "MIT/Apache-2.0"
+keywords = [ "struct", "anonymous", "structural", "named arguments", "ad-hoc" ]
+readme = "README.md"
+repository = "https://github.com/oooutlk/structx"
+documentation = "https://docs.rs/structx"
+categories = [ "rust-patterns" ]
+description = "Simulating anonymous struct and named arguments in Rust."
+
+[build-dependencies]
+inwelling = "0.2"
+
+[dependencies]
+structx_derive = { path = "../structx_derive", version = "0.1" }
