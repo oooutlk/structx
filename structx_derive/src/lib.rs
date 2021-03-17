@@ -222,7 +222,7 @@ pub fn scan_structx_from_source_files( input: TokenStream ) -> TokenStream {
             .map( |n| Ident::new( &format!( "T{}", n ), Span::call_site() ));
         let field_idents = fields.0.iter();
         struct_items.push( parse_quote!{
-            #[derive( Debug, PartialEq, Eq, PartialOrd, Ord, Hash )]
+            #[derive( Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash )]
             pub struct #struct_ident <#( #generics ),*> {
                 #( pub #field_idents: #field_types,)*
             }
