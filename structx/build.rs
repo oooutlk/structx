@@ -34,10 +34,13 @@ fn main() {
 
     let mut output = String::from( "structx_derive::scan_structx_from_source_files!{\n" );
     for rs_file in rs_files {
+        let rs_file_name = rs_file.to_str().unwrap();
+        println!( "cargo:rerun-if-changed={}", rs_file_name );
+
         if cfg!( unix ) {
-            output.push_str( &format!( "    \"{}\",\n", rs_file.to_str().unwrap() ));
+            output.push_str( &format!( "    \"{}\",\n", rs_file_name ));
         } else {
-            output.push_str( &format!( "    \"{}\",\n", rs_file.to_str().unwrap().replace( "\\", "\\\\" )));
+            output.push_str( &format!( "    \"{}\",\n", rs_file_name.replace( "\\", "\\\\" )));
         }
     }
     output.push( '}' );

@@ -85,19 +85,6 @@ At call site, wrap arguments with `args!{}`.
 set_size( args!{ width: 1024, height: 768 });
 ```
 
-# Caveat
-
-## Reverse dependency
-
-Collecting types and values of anonymous structs from downstream crates makes
-crate structx depending on its users. Unfortunately this kind of
-reverse-dependency is not known to cargo. As a result, the modifications of .rs
-files which change types and values of anonymous structs will not cause
-recompilation of crate structx, which it should.
-
-To address this issue, simply do `cargo clean`, or more precisely,
-`cargo clean --package structx` before running `cargo build`.
-
 # License
 
 Under Apache License 2.0 or MIT License, at your will.
