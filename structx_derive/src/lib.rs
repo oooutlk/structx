@@ -57,7 +57,7 @@ pub fn structx( input: TokenStream ) -> TokenStream {
             }
         }
     }
-    panic!("structx!{} should be some struct.");
+    panic!("structx!() should be some struct.");
 }
 
 struct StructxField {
@@ -127,7 +127,7 @@ fn join_field_members<'a>( members: impl Iterator<Item=&'a Member> ) -> (String,
             if let Member::Named( ident ) = member {
                 ident.clone()
             } else {
-                panic!("structx!{}'s fields should have names.");
+                panic!("structx!()'s fields should have names.");
             }
         )
         .zip( (0..).map( |_| None ))
@@ -292,12 +292,12 @@ impl<'a> StructxCollector<'a> {
                                 (ident.clone(), None )
                             }
                         } else {
-                            panic!("structx!{}'s fields should have names.");
+                            panic!("structx!()'s fields should have names.");
                         }
                     })
                 ));
             } else {
-                panic!("structx!{}'s supported pattern matching is struct only.");
+                panic!("structx!()'s supported pattern matching is struct only.");
             }
         }
     }
