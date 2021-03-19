@@ -1,48 +1,30 @@
+use inwelling::*;
+
 use std::{
     env,
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
-fn scan_rs_files( current_dir: impl AsRef<Path>, rs_files: &mut Vec<PathBuf> ) {
-    if let Ok( entries ) = current_dir.as_ref().read_dir() {
-        for entry in entries {
-            if let Ok( entry ) = entry {
-                let path = entry.path();
-                if path.is_dir() {
-                    scan_rs_files( path, rs_files );
-                } else if let Some( extention ) = path.extension() {
-                    if extention == "rs" {
-                        rs_files.push( path );
-                    }
-                }
-            }
-        }
-    }
-}
-
 fn main() {
-    let rs_files = inwelling::inwelling()
+    let mut output = inwelling( Opts{ watch_manifest: true, watch_rs_files: true, dump_rs_paths: true })
         .sections
         .into_iter()
-        .fold( Vec::new(), |mut rs_files, section| {
-            let manifest_path = section.manifest.parent().unwrap();
-            scan_rs_files( &manifest_path.join( "src"      ), &mut rs_files );
-            scan_rs_files( &manifest_path.join( "examples" ), &mut rs_files );
-            scan_rs_files( &manifest_path.join( "tests"    ), &mut rs_files );
-            rs_files
+        .fold( String::from( "structx_derive::scan_structx_from_source_files!{\n" ), |mut output, section| {
+            section
+                .rs_paths
+                .unwrap()
+                .iter()
+                .for_each( |rs_path| {
+                    let rs_path = rs_path.to_str().unwrap();
+
+                    if cfg!( windows ) {
+                        output.push_str( &format!( "    \"{}\",\n", rs_path.replace( "\\", "\\\\" )));
+                    } else {
+                        output.push_str( &format!( "    \"{}\",\n", rs_path ));
+                    }
+                });
+            output
         });
-
-    let mut output = String::from( "structx_derive::scan_structx_from_source_files!{\n" );
-    for rs_file in rs_files {
-        let rs_file_name = rs_file.to_str().unwrap();
-        println!( "cargo:rerun-if-changed={}", rs_file_name );
-
-        if cfg!( unix ) {
-            output.push_str( &format!( "    \"{}\",\n", rs_file_name ));
-        } else {
-            output.push_str( &format!( "    \"{}\",\n", rs_file_name.replace( "\\", "\\\\" )));
-        }
-    }
     output.push( '}' );
 
     let out_path = PathBuf::from( env::var( "OUT_DIR" )
