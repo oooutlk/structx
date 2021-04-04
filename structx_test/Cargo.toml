@@ -7,6 +7,14 @@ publish = false
 
 [dependencies]
 structx = { path = "../structx", version = "0.1" }
+lens-rs = { path = "../../lens-rs/lens-rs", version = "0.2", optional = true }
+
+[package.metadata.inwelling-lens-rs]
+feature = "lens"
 
 [package.metadata.inwelling]
 structx = true
+lens-rs = true
+
+[features]
+lens = [ "lens-rs", "structx/lens-rs" ]

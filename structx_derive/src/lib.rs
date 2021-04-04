@@ -221,10 +221,32 @@ pub fn scan_structx_from_source_files( input: TokenStream ) -> TokenStream {
         let field_types = ( 0..fields.1.len() )
             .map( |n| Ident::new( &format!( "T{}", n ), Span::call_site() ));
         let field_idents = fields.0.iter();
+
+        //#[cfg( not( any( feature = "lens-rs" )))]
+        //let extra_derives = None::<syn::Path>;
+
+        //#[cfg( feature = "lens-rs" )]
+        //let extra_derives: Vec<syn::Path> = vec![
+        //    parse_quote!( lens_rs::Review ),
+        //    parse_quote!( lens_rs::Traversal ),
+        //    parse_quote!( lens_rs::Prism ),
+        //    parse_quote!( lens_rs::Lens ),
+        //].into_iter();
+
+        #[cfg( not( feature = "lens-rs" ))]
         struct_items.push( parse_quote!{
             #[derive( Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash )]
             pub struct #struct_ident <#( #generics ),*> {
                 #( pub #field_idents: #field_types,)*
+            }
+        });
+
+        #[cfg( feature = "lens-rs" )]
+        struct_items.push( parse_quote!{
+            #[derive( Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash )]
+            #[derive( lens_rs::Optic, lens_rs::Review, lens_rs::Prism, lens_rs::Lens )]
+            pub struct #struct_ident <#( #generics ),*> {
+                #( #[optic] pub #field_idents: #field_types,)*
             }
         });
     }

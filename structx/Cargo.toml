@@ -16,3 +16,4 @@ inwelling = "0.3"
 
 [dependencies]
 structx_derive = { path = "../structx_derive", version = "0.1" }
+lens-rs = { path = "../../lens-rs/lens-rs", version = "0.2", optional = true }

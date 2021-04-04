@@ -46,4 +46,55 @@ mod tests {
         assert_eq!( with_owned_args( args!{ x: 3, y: "4".to_owned() }), "3 4".to_owned() );
         assert_eq!( with_borrowed_args( args!{ x: true, y: "false" }), "true false".to_owned() );
     }
+
+    #[cfg( feature = "lens" )]
+    #[test]
+    fn lens_test_nested() {
+        use lens_rs::*;
+
+        #[derive( Copy, Clone, Debug, Optic, Review, Prism )]
+        enum Either<L, R> {
+            #[optic] Left(  L ),
+            #[optic] Right( R ),
+        }
+        use Either::*;
+
+        #[derive( Copy, Clone, Debug, Optic, Lens )]
+        struct Tuple<A, B>( #[optic] A, #[optic] B );
+
+        let mut x: (i32, Either<Tuple<Vec<Option<Structx!{ a:String, b:i32 }>>, i32>, i32>) = (
+            1,
+            Left( Tuple(
+                vec![
+                    Some( structx!{
+                        a : "a".to_string(),
+                        b : 2,
+                    }),
+                    None,
+                    Some( structx!{
+                        a : 'c'.to_string(),
+                        b : 3,
+                    }),
+                ],
+                4,
+            )),
+        );
+
+        x.preview_mut( optics!( _1.Left._1 )).map( |x| *x *= 2 );
+        assert_eq!( x.preview_ref( optics!( _1.Left._1 )), Some( &8 ));
+
+        x.preview_mut( optics!( _1.Right )).map( |x: &mut i32| *x *= 2 );
+        assert_eq!( x.preview_ref( optics!( _1.Right )), None );
+
+        *x.view_mut( optics!( _0 )) += 1;
+        assert_eq!( x.0, 2 );
+
+        //x.traverse_mut(optics!(_1.Left._0._mapped.Some.a))
+        //    .into_iter()
+        //    .for_each(|s| *s = s.to_uppercase());
+        //assert_eq!(
+        //    x.traverse(optics!(_1.Left._0._mapped.Some.a)),
+        //    vec!["A".to_string(), "C".to_string()]
+        //);
+    }
 }
