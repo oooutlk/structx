@@ -13,6 +13,9 @@ description = "Simulating anonymous struct and named arguments in Rust."
 
 [build-dependencies]
 inwelling = "0.3"
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "1.0", features = ["extra-traits","full","parsing","visit","visit-mut"] }
 
 [dependencies]
 structx_derive = { path = "../structx_derive", version = "0.1" }

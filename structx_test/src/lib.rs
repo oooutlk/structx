@@ -89,12 +89,12 @@ mod tests {
         *x.view_mut( optics!( _0 )) += 1;
         assert_eq!( x.0, 2 );
 
-        //x.traverse_mut(optics!(_1.Left._0._mapped.Some.a))
-        //    .into_iter()
-        //    .for_each(|s| *s = s.to_uppercase());
-        //assert_eq!(
-        //    x.traverse(optics!(_1.Left._0._mapped.Some.a)),
-        //    vec!["A".to_string(), "C".to_string()]
-        //);
+        x.traverse_mut(optics!(_1.Left._0._mapped.Some.a))
+            .into_iter()
+            .for_each(|s| *s = s.to_uppercase());
+        assert_eq!(
+            x.traverse(optics!(_1.Left._0._mapped.Some.a)),
+            vec!["A".to_string(), "C".to_string()]
+        );
     }
 }
