@@ -1,12 +1,12 @@
 [package]
 name = "structx_test"
-version = "0.1.0"
+version = "0.1.4"
 authors = ["oooutlk <oooutlk@outlook.com>"]
 edition = "2018"
 publish = false
 
 [dependencies]
-structx = { path = "../structx", version = "0.1" }
+structx = { path = "../structx", version = "0.1.4" }
 lens-rs = { version = "0.3", features = ["structx"], optional = true }
 
 [package.metadata.inwelling-lens-rs]
