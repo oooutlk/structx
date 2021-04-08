@@ -148,7 +148,7 @@ fn main() {
         );
 
     let (lens_traits, optic) = if cfg!( feature = "lens-rs" ) {
-        ("#[derive( lens_rs::Optic, lens_rs::Lens )]", "#[optic] ")
+        ("#[derive( lens_rs::Lens )]", "#[optic] ")
     } else {
         ("", "")
     };

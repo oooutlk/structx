@@ -52,14 +52,14 @@ mod tests {
     fn lens_test_nested() {
         use lens_rs::*;
 
-        #[derive( Copy, Clone, Debug, Optic, Review, Prism )]
+        #[derive( Copy, Clone, Debug, Review, Prism )]
         enum Either<L, R> {
             #[optic] Left(  L ),
             #[optic] Right( R ),
         }
         use Either::*;
 
-        #[derive( Copy, Clone, Debug, Optic, Lens )]
+        #[derive( Copy, Clone, Debug, Lens )]
         struct Tuple<A, B>( #[optic] A, #[optic] B );
 
         let mut x: (i32, Either<Tuple<Vec<Option<Structx!{ a:String, b:i32 }>>, i32>, i32>) = (
