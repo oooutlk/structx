@@ -1,3 +1,6 @@
+See [RFC as Readme-For-Crate](https://github.com/oooutlk/structx/blob/main/README.md)
+for more.
+ 
 # Overview
 
 This project provides simulation of anonymous struct and named arguments in

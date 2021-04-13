@@ -47,6 +47,31 @@ mod tests {
         assert_eq!( with_borrowed_args( args!{ x: true, y: "false" }), "true false".to_owned() );
     }
 
+    #[test]
+    fn test_pattern_matching() {
+        let alpha = 42u8;
+        let beta = true;
+        let my_record = structx!{
+            alpha,
+            beta ,
+            gamma: "Dancing Ferris",
+        };
+        match my_record {
+            structx!{ alpha, beta, gamma } =>
+                println!( "{}, {}, {}", alpha, beta, gamma ),
+        }
+
+        let structx!{ alpha, beta, gamma } = my_record;
+        println!( "{}, {}, {}", alpha, beta, gamma );
+    }
+
+    #[test]
+    fn test_struct_update_syntax() {
+        let yellow = structx!{ red: 0, green: 255, blue: 255 };
+        let white = structx!{ red: 255, ..yellow };
+        assert_eq!( white, structx!{ red: 255, green: 255, blue: 255 });
+    }
+
     #[cfg( feature = "lens" )]
     #[test]
     fn lens_test_nested() {

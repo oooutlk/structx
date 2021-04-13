@@ -155,23 +155,23 @@ fn main() {
 
     let output = struct_map
         .into_iter()
-        .fold( String::new(), |acc, (struct_name, (field_idents,field_types))| {
+        .fold( String::new(), |acc, (struct_name, (field_idents, field_types))| {
             format!( r#"{}
 #[allow( non_camel_case_types )]
-{}
+{lens_traits}
 #[derive( Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash )]
-pub struct {}<{}>{{{}
+pub struct {struct_name}<{generics}>{{{fields}
 }}
 "#,
                     acc,
-                    lens_traits,
-                    struct_name,
-                    ( 1..field_types.len() )
+                    lens_traits = lens_traits,
+                    struct_name = struct_name,
+                    generics = ( 1..field_types.len() )
                         .fold( "T0".to_owned(), |acc, nth| format!( "{},T{}", acc, nth )),
-                    field_idents
-                        .into_iter()
+                    fields = field_idents
+                        .iter()
                         .enumerate()
-                        .fold( String::new(), |acc, (nth, field)| format!( "{}\n    {}pub {}: T{},", acc, optic, field, nth ))
+                        .fold( String::new(), |acc, (nth, field)| format!( "{}\n    {}pub {}: T{},", acc, optic, field, nth )),
             )});
 
     let out_path = PathBuf::from( env::var( "OUT_DIR" ).expect( "$OUT_DIR should exist." ));

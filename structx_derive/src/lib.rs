@@ -38,8 +38,27 @@ use syn::{
 pub fn structx( input: TokenStream ) -> TokenStream {
     let input_expr = wrap_struct_name( "structx_", input.clone() );
     if let Ok( expr_struct ) = syn::parse::<ExprStruct>( input_expr ) {
-        let (struct_name, _, _) = join_field_members( expr_struct.fields.iter().map( |field| &field.member ));
-        return wrap_struct_name( &struct_name, input );
+        if let Some( rest ) = &expr_struct.rest {
+            let rest = &**rest;
+            let specified_idents = expr_struct
+                .fields
+                .iter()
+                .map( |field|
+                    if let Member::Named( field_ident ) = &field.member {
+                        field_ident
+                    } else {
+                        panic!();
+                    }
+                );
+            let specified_exprs = expr_struct
+                .fields
+                .iter()
+                .map( |field| &field.expr );
+            return quote!({ let mut _rest = #rest; #( _rest.#specified_idents = #specified_exprs; )* _rest }).into();
+        } else {
+            let (struct_name, _, _) = join_field_members( expr_struct.fields.iter().map( |field| &field.member ));
+            return wrap_struct_name( &struct_name, input );
+        }
     } else {
         let input_pat = wrap_struct_name( "structx_", input.clone() );
         if let Ok( pat ) = syn::parse::<Pat>( input_pat ) {
