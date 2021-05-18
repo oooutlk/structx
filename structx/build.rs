@@ -141,9 +141,11 @@ fn main() {
         .into_iter()
         .for_each( |section| section.rs_paths.unwrap().into_iter()
             .for_each( |rs_path| {
-                let contents = String::from_utf8( fs::read( rs_path ).unwrap() ).unwrap();
-                let syntax = syn::parse_file( &contents ).expect(".rs files should contain valid Rust source code.");
-                structx_collector.visit_file( &syntax );
+                let contents = String::from_utf8( fs::read( rs_path.clone() ).unwrap() ).unwrap();
+                let syntax = syn::parse_file( &contents );
+                if let Ok( syntax ) = syntax {
+                    structx_collector.visit_file( &syntax );
+                } // it's better to report compile errors in downstream crates
             })
         );
 

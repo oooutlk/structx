@@ -62,7 +62,7 @@
 //! ```
 //! ## Traits derived for anonymous structs
 //!
-//! Debug, PartialEq, Eq, PartialOrd, Ord, Hash.
+//! Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash.
 //!
 //! ```rust
 //! let a = structx!{ width :  800, height: 600 };
