@@ -1,8 +1,8 @@
 [package]
 name = "structx"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["oooutlk <oooutlk@outlook.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT/Apache-2.0"
 keywords = [ "struct", "anonymous", "named", "arguments", "lens" ]
 readme = "README.md"
@@ -12,7 +12,7 @@ categories = [ "rust-patterns" ]
 description = "Simulating anonymous struct and named arguments in Rust."
 
 [build-dependencies]
-inwelling = "0.3"
+inwelling = "0.4"
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "1.0", features = ["extra-traits","full","parsing","visit","visit-mut"] }

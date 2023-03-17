@@ -1,5 +1,3 @@
-use inwelling::*;
-
 use proc_macro2::{
     Delimiter,
     Group,
@@ -136,10 +134,10 @@ fn main() {
     let mut struct_map = StructMap::new();
     let mut structx_collector = StructxCollector( &mut struct_map );
 
-    inwelling( Opts{ watch_manifest: true, watch_rs_files: true, dump_rs_paths: true })
-        .sections
+    inwelling::collect_downstream( inwelling::Opts{ watch_manifest: true, watch_rs_files: true, dump_rs_paths: true })
+        .packages
         .into_iter()
-        .for_each( |section| section.rs_paths.unwrap().into_iter()
+        .for_each( |package| package.rs_paths.unwrap().into_iter()
             .for_each( |rs_path| {
                 let contents = String::from_utf8( fs::read( rs_path.clone() ).unwrap() ).unwrap();
                 let syntax = syn::parse_file( &contents );

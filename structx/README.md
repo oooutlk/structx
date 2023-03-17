@@ -15,8 +15,17 @@ Add the following in your Cargo.toml file:
 [dependencies]
 structx = "0.1"
 
+[build-dependencies]
+inwelling = "0.4"
+
 [package.metadata.inwelling]
 structx = true
+```
+
+Add the following in your build.rs file:
+
+```rust
+inwelling::register();
 ```
 
 Add the following in your .rs files:
