@@ -1,16 +1,16 @@
 [package]
 name = "structx_test"
-version = "0.1.6"
+version = "0.1.8"
 authors = ["oooutlk <oooutlk@outlook.com>"]
 edition = "2021"
 publish = false
 
 [dependencies]
-structx = { path = "../structx", version = "0.1.5" }
+structx = { path = "../structx", version = "0.1.8" }
 lens-rs = { version = "0.3", features = ["structx"], optional = true }
 
 [build-dependencies]
-inwelling = "0.4"
+inwelling = { path = "../../inwelling", version = "0.5" }
 
 [package.metadata.inwelling]
 structx = true

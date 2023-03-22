@@ -25,7 +25,7 @@
 //! Add the following in your build.rs file:
 //!
 //! ```rust
-//! inwelling::register();
+//! inwelling::to( "structx" );
 //! ```
 //! Add the following in your .rs files:
 //!
