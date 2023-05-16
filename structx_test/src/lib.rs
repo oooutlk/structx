@@ -30,6 +30,36 @@ mod tests {
     }
 
     #[test]
+    fn nested_anonymous_struct() {
+        let pixel = structx!{
+            color: structx!{ red: 255u8, green: 0u8, blue: 0u8 },
+            position: structx!{ x: 3u16, y: 4u16 },
+        };
+
+        fn returns_nested_structx( red: u8, green: u8, blue: u8, x: u16, y: u16 )
+            -> Structx!{
+                color: Structx!{ red: u8, green: u8, blue: u8 },
+                position: Structx!{ x: u16, y: u16 },
+            }
+        {
+            structx!{
+                color: structx!{ red, green, blue },
+                position: structx!{ x, y },
+            }
+        }
+
+        assert_eq!( returns_nested_structx( 255, 0, 0, 3, 4 ), pixel );
+
+        let recursive_structx = structx!{ a: structx!{ a: "recursive structx" }, };
+
+        fn returns_recursive_structx() -> Structx!{ a: Structx!{ a: &'static str }} {
+            structx!{ a: structx!{ a: "recursive structx" }}
+        }
+
+        assert_eq!( returns_recursive_structx(), recursive_structx );
+    }
+
+    #[test]
     fn named_argsuments() {
         use structx::named_args::*;
 

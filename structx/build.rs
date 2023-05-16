@@ -24,7 +24,7 @@ use syn::{
     Macro,
     Member,
     Pat,
-    PathArguments,
+    PatMacro,
     Type,
     visit::{self, Visit},
 };
@@ -63,7 +63,7 @@ impl<'a> Visit<'_> for StructxCollector<'a> {
 
         if mac.path.leading_colon.is_none() && mac.path.segments.len() == 1 {
             let seg = mac.path.segments.first().unwrap();
-            if seg.arguments == PathArguments::None && ( seg.ident == "structx" || seg.ident == "Structx" ) {
+            if ( seg.ident == "structx" || seg.ident == "Structx" ) && seg.arguments.is_none() {
                 self.parse_structx( mac.tokens.clone().into() );
             }
         }
@@ -100,29 +100,38 @@ impl<'a> Visit<'_> for StructxCollector<'a> {
 }
 
 impl<'a> StructxCollector<'a> {
-    // parse `structx!{}` in source files.
+    // parse `structx!{}`/`Structx!{}` in source files.
     fn parse_structx( &mut self, input: TokenStream ) {
         let input_pat = wrap_struct_name( "structx_", input );
 
         if let Ok( pat ) = syn::parse2::<Pat>( input_pat ) {
             if let Pat::Struct( pat_struct ) = pat {
-                self.add_structx_definition( join_fields(
+                let joined_fields = join_fields(
                     pat_struct.fields.iter().map( |field| {
                         if let Member::Named( ident ) = &field.member {
                             if let Pat::Type( pat_type ) = &*field.pat {
                                 (ident.clone(), Some( (*pat_type.ty).clone() ))
                             } else {
+                                if let Pat::Macro( PatMacro{ attrs: _, mac }) = &*field.pat {
+                                    if mac.path.leading_colon.is_none() && mac.path.segments.len() == 1 {
+                                        let seg = mac.path.segments.first().unwrap();
+                                        if ( seg.ident == "Structx" || seg.ident == "structx" ) && seg.arguments.is_none() {
+                                            self.parse_structx( mac.tokens.clone().into() );
+                                        }
+                                    }
+                                }
                                 (ident.clone(), None )
                             }
                         } else {
                             panic!("structx!()'s fields should have names.");
                         }
                     })
-                ));
+                );
+                self.add_structx_definition( joined_fields );
             } else {
                 panic!("structx!()'s supported pattern matching is struct only.");
             }
-        }
+        } // Structx!{}'s inner tokens may not be parsed as pattern.
     }
 
     fn add_structx_definition( &mut self, (struct_name,field_idents,field_types) : (String, Vec<Ident>, Vec<Option<Type>> )) {
