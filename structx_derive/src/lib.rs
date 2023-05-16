@@ -16,22 +16,29 @@ use quote::{
 
 use std::mem;
 
-use syn::{
-    ExprStruct,
-    FnArg,
-    Ident,
-    ItemFn,
-    Member,
-    Pat,
-    Token,
-    Type,
-    parse_macro_input,
-    parse_quote,
-    parse::{Parse, ParseStream},
-    punctuated::Punctuated,
-    token::Colon,
-    visit_mut::{self, VisitMut},
-};
+use syn::{ExprStruct, FnArg, Ident, ItemFn, Member, Pat, Token, Type, parse_macro_input, parse_quote, parse::{Parse, ParseStream}, punctuated::Punctuated, token::Colon, visit_mut::{self, VisitMut}, PatStruct};
+use syn::spanned::Spanned;
+
+/*
+ * Introduced a new type which can be parsed with syn::parse2.
+ * This is necessary because syn version 2 doesn't implement Parse for Pat
+ */
+struct StructX {
+    pat: PatStruct
+}
+impl Parse for StructX {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let pat = Pat::parse_single(input)?;
+        if let Pat::Struct(pat) = pat {
+            Ok(StructX { pat })
+        } else {
+            Err(syn::Error::new(
+                pat.span(),
+                "structx!()'s supported pattern matching is struct only."
+            ))
+        }
+    }
+}
 
 /// Value of anonymous struct.
 #[proc_macro]
@@ -61,11 +68,9 @@ pub fn structx( input: TokenStream ) -> TokenStream {
         }
     } else {
         let input_pat = wrap_struct_name( "structx_", input.clone() );
-        if let Ok( pat ) = syn::parse::<Pat>( input_pat ) {
-            if let Pat::Struct( pat_struct ) = pat {
-                let (struct_name, _, _) = join_field_members( pat_struct.fields.iter().map( |field| &field.member ));
-                return wrap_struct_name( &struct_name, input );
-            }
+        if let Ok( struct_x ) = syn::parse::<StructX>( input_pat ) {
+            let (struct_name, _, _) = join_field_members( struct_x.pat.fields.iter().map( |field| &field.member ));
+            return wrap_struct_name( &struct_name, input );
         }
     }
     panic!("structx!() should be some struct.");
