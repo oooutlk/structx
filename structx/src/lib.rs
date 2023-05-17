@@ -99,19 +99,13 @@
 //!
 //! Under Apache License 2.0 or MIT License, at your will.
 
-pub use structx_derive::{
-    Structx,
-    structx,
-};
+pub use structx_derive::{structx, Structx};
 
 /// Simulating named arguments.
 /// `#[named_args]` is for functions with named arguments.
 /// `arg!{}` is an alias for `structx!{}`.
 pub mod named_args {
-    pub use structx_derive::{
-        named_args,
-        structx as args,
-    };
+    pub use structx_derive::{named_args, structx as args};
 }
 
-include!( concat!( env!( "OUT_DIR" ), "/bindings.rs" ));
+include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
