@@ -1,5 +1,6 @@
 #[cfg( test )]
 mod tests {
+    use std::collections::HashMap;
     use structx::*;
 
     #[test]
@@ -57,6 +58,67 @@ mod tests {
         }
 
         assert_eq!( returns_recursive_structx(), recursive_structx );
+    }
+
+
+    #[test]
+    fn recursively_nested_anonymous_struct() {
+
+        let model = structx!{
+            // nested macros which contain again structx!() is currently not supported
+            // So you can't use vec![] instead of Vec::from()
+            products: Vec::from([
+                structx! {
+                    id: 0,
+                    name: "Pullover"
+                },
+                structx! {
+                    id: 1,
+                    name: "T-Shirt"
+                },
+            ]),
+            session: structx! {
+                user: structx! {
+                    username: "xxtheusernamexx"
+                },
+                tokens: HashMap::from([("a0bd6d46-3324-4566-836b-96b3767b6295", structx! {
+                    valid_until: 1684249334,
+                    created: 1664249334
+                })])
+            }
+        };
+
+        fn returns_nested_structx(username: &str) -> Structx! {
+            products: Vec<Structx!{ id: usize, name: &'static str }>,
+            session: Structx! {
+                user: Structx! { username: &str },
+                tokens: HashMap<&str, Structx!{ valid_until: usize, created: usize }> }
+        }
+        {
+
+            structx!{
+                products: Vec::from([
+                    structx! {
+                        id: 0,
+                        name: "Pullover"
+                    },
+                    structx! {
+                        id: 1,
+                        name: "T-Shirt"
+                    },
+                ]),
+                session: structx! {
+                    user: structx! {
+                        username
+                    },
+                    tokens: HashMap::from([("a0bd6d46-3324-4566-836b-96b3767b6295", structx! {
+                        valid_until: 1684249334,
+                        created: 1664249334
+                    })])
+                }
+            }
+        }
+        assert_eq!(returns_nested_structx( "xxtheusernamexx"), model);
     }
 
     #[test]
