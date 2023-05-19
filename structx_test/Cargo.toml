@@ -10,7 +10,7 @@ structx = { path = "../structx", version = "0.1.10" }
 lens-rs = { version = "0.3", features = ["structx"], optional = true }
 
 [build-dependencies]
-inwelling = { path = "../../inwelling", version = "0.5" }
+inwelling = "0.5"
 
 [package.metadata.inwelling]
 structx = true

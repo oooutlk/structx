@@ -69,6 +69,7 @@ mod tests {
 
     #[test]
     fn type_only_anonymous_struct() {
+        #[allow(dead_code)]
         type Props<T, T1> = Structx! {
             items: Vec<Structx!{ name: T }>,
             products: Vec<Structx! { el: Structx! { field: T1 } }>
@@ -78,9 +79,7 @@ mod tests {
     #[test]
     fn recursively_nested_anonymous_struct() {
         let model = structx! {
-            // nested macros which contain again structx!() is currently not supported
-            // So you can't use vec![] instead of Vec::from()
-            products: Vec::from([
+            products: vec![
                 structx! {
                     id: 0,
                     name: "Pullover"
@@ -89,7 +88,7 @@ mod tests {
                     id: 1,
                     name: "T-Shirt"
                 },
-            ]),
+            ],
             session: structx! {
                 user: structx! {
                     username: "xxtheusernamexx"
@@ -110,7 +109,7 @@ mod tests {
                    tokens: HashMap<&str, Structx!{ valid_until: usize, created: usize }> }
            } {
             structx! {
-                products: Vec::from([
+                products: vec![
                     structx! {
                         id: 0,
                         name: "Pullover"
@@ -119,7 +118,7 @@ mod tests {
                         id: 1,
                         name: "T-Shirt"
                     },
-                ]),
+                ],
                 session: structx! {
                     user: structx! {
                         username

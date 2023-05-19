@@ -16,6 +16,7 @@ use syn::{
  * This is necessary because syn version 2 doesn't implement Parse for Pat
  */
 struct PatStructX(PatStruct);
+
 impl Parse for PatStructX {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let inner = Pat::parse_single(input)?;
@@ -29,19 +30,15 @@ impl Parse for PatStructX {
     }
 }
 
-//
-// Introduced a new type which abstracts over a field value type
-//
+// A new type which abstracts over a field value type
 enum FieldValue {
     Expr(Expr),
     Pat(Pat),
     Type(Type),
 }
 
-//
 // StructX is now responsible for parsing the inner part of
 // a structx macro.
-//
 enum StructX {
     Expr(ExprStruct),
     Item(ItemStruct),
@@ -274,7 +271,6 @@ impl<'a> StructXCollector<'a> {
                 self.parse_structx(mac.tokens.clone().into());
             }
         }
-        // TODO add nested anonymous structs in macros such as vec![]
     }
     // parse `structx!{}`/`Structx!{}`/`args!{}` in source files.
     fn parse_structx(&mut self, input: TokenStream) {

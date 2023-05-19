@@ -16,7 +16,7 @@ Add the following in your Cargo.toml file:
 structx = "0.1"
 
 [build-dependencies]
-inwelling = "0.4"
+inwelling = "0.5"
 
 [package.metadata.inwelling]
 structx = true
