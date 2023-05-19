@@ -7,9 +7,8 @@ use syn::parse::{Parse, ParseStream};
 use syn::spanned::Spanned;
 use syn::{
     visit::{self, Visit},
-    Arm, Attribute, Block, Error, Expr, ExprStruct, Field, FnArg, GenericArgument, ItemFn,
-    ItemStruct, Macro, Member, Meta, Pat, PatStruct, Path, PathArguments, ReturnType, Stmt, Type,
-    Visibility,
+    Attribute, Error, Expr, ExprStruct, Field, FnArg, ItemFn, ItemStruct, Macro, Member, Meta, Pat,
+    PatStruct, Type, Visibility,
 };
 
 /*
@@ -265,219 +264,6 @@ impl<'a> Visit<'_> for StructXCollector<'a> {
 }
 
 impl<'a> StructXCollector<'a> {
-    fn collect_structx_in_arm(&mut self, arm: &Arm) {
-        self.collect_structx_in_pat(&arm.pat);
-        self.collect_structx_in_expr(&arm.body);
-        arm.guard
-            .iter()
-            .for_each(|(_, guard)| self.collect_structx_in_expr(guard));
-    }
-    fn collect_structx_in_stmt(&mut self, stmt: &Stmt) {
-        match stmt {
-            Stmt::Local(_) => {}
-            Stmt::Item(_) => {}
-            Stmt::Expr(_, _) => {}
-            Stmt::Macro(_) => {}
-        }
-    }
-    /*
-     * Can occur when we use nested structx!() in const generics e.g:
-     * structx! {
-     *  member: MyStruct::<structx!{ name: 0}> { .. }
-     * }
-     */
-    fn collect_structx_in_expr(&mut self, expr: &Expr) {
-        match expr {
-            Expr::Array(array_expr) => {
-                array_expr
-                    .elems
-                    .iter()
-                    .for_each(|inner| self.collect_structx_in_expr(inner));
-            }
-            Expr::Assign(assign_expr) => {
-                self.collect_structx_in_expr(&assign_expr.left);
-                self.collect_structx_in_expr(&assign_expr.right);
-            }
-            Expr::Async(async_expr) => self.collect_structx_in_block(&async_expr.block),
-
-            Expr::Await(await_expr) => self.collect_structx_in_expr(&await_expr.base),
-            Expr::Binary(binary_expr) => {
-                self.collect_structx_in_expr(&binary_expr.left);
-                self.collect_structx_in_expr(&binary_expr.right);
-            }
-            Expr::Block(block_expr) => self.collect_structx_in_block(&block_expr.block),
-            Expr::Break(break_expr) => break_expr
-                .expr
-                .iter()
-                .for_each(|inner| self.collect_structx_in_expr(inner)),
-            Expr::Call(call_expr) => {
-                call_expr
-                    .args
-                    .iter()
-                    .for_each(|arg| self.collect_structx_in_expr(arg));
-                self.collect_structx_in_expr(&call_expr.func);
-            }
-            Expr::Cast(cast) => self.collect_structx_in_expr(&cast.expr),
-            Expr::Closure(closure_expr) => {
-                self.collect_structx_in_return_type(&closure_expr.output);
-                closure_expr
-                    .inputs
-                    .iter()
-                    .for_each(|arg_pat| self.collect_structx_in_pat(arg_pat));
-                self.collect_structx_in_expr(&closure_expr.body);
-            }
-            Expr::Const(const_expr) => self.collect_structx_in_block(&const_expr.block),
-            Expr::Continue(_) => {}
-            Expr::Field(field) => self.collect_structx_in_expr(&field.base),
-            Expr::ForLoop(for_loop_expr) => {
-                self.collect_structx_in_pat(&for_loop_expr.pat);
-                self.collect_structx_in_expr(&for_loop_expr.expr);
-                self.collect_structx_in_block(&for_loop_expr.body);
-            }
-            Expr::Group(group) => self.collect_structx_in_expr(&group.expr),
-            Expr::If(if_expr) => {
-                self.collect_structx_in_expr(&if_expr.cond);
-                self.collect_structx_in_block(&if_expr.then_branch);
-                if_expr
-                    .else_branch
-                    .iter()
-                    .for_each(|(_, inner)| self.collect_structx_in_expr(&inner));
-            }
-            Expr::Index(index_expr) => {
-                self.collect_structx_in_expr(&index_expr.expr);
-                self.collect_structx_in_expr(&index_expr.index);
-            }
-            Expr::Infer(_) => {}
-            Expr::Let(let_expr) => {
-                self.collect_structx_in_expr(&let_expr.expr);
-                self.collect_structx_in_pat(&let_expr.pat);
-            }
-            Expr::Lit(_) => {}
-            Expr::Loop(loop_expr) => self.collect_structx_in_block(&loop_expr.body),
-            Expr::Macro(mac_expr) => self.collect_structx_in_macro(&mac_expr.mac),
-            Expr::Match(match_expr) => {
-                self.collect_structx_in_expr(&match_expr.expr);
-                match_expr
-                    .arms
-                    .iter()
-                    .for_each(|arm| self.collect_structx_in_arm(arm));
-            }
-            Expr::MethodCall(method_call_expr) => {
-                method_call_expr
-                    .args
-                    .iter()
-                    .for_each(|arg| self.collect_structx_in_expr(arg));
-                self.collect_structx_in_expr(&method_call_expr.receiver);
-                method_call_expr.turbofish.iter().for_each(|abg| {
-                    abg.args
-                        .iter()
-                        .for_each(|ga| self.collect_structx_in_generic_argument(ga))
-                });
-            }
-            Expr::Paren(paren_expr) => self.collect_structx_in_expr(&paren_expr.expr),
-            Expr::Path(path_expr) => self.collect_structx_in_path(&path_expr.path),
-            Expr::Range(range_expr) => {
-                range_expr
-                    .start
-                    .iter()
-                    .for_each(|start| self.collect_structx_in_expr(&start));
-                range_expr
-                    .end
-                    .iter()
-                    .for_each(|end| self.collect_structx_in_expr(&end));
-            }
-            Expr::Reference(ref_expr) => self.collect_structx_in_expr(&ref_expr.expr),
-            Expr::Repeat(repeat_expr) => {
-                self.collect_structx_in_expr(&repeat_expr.expr);
-                self.collect_structx_in_expr(&repeat_expr.len);
-            }
-            Expr::Return(return_expr) => return_expr
-                .expr
-                .iter()
-                .for_each(|expr| self.collect_structx_in_expr(expr)),
-            Expr::Struct(struct_expr) => {
-                self.collect_structx_in_path(&struct_expr.path);
-                struct_expr
-                    .fields
-                    .iter()
-                    .for_each(|field| self.collect_structx_in_expr(&field.expr));
-                struct_expr
-                    .rest
-                    .iter()
-                    .for_each(|rest| self.collect_structx_in_expr(rest));
-            }
-            Expr::Try(try_expr) => self.collect_structx_in_expr(&try_expr.expr),
-            Expr::TryBlock(try_block_expr) => self.collect_structx_in_block(&try_block_expr.block),
-            Expr::Tuple(tuple_expr) => tuple_expr
-                .elems
-                .iter()
-                .for_each(|expr| self.collect_structx_in_expr(expr)),
-            Expr::Unary(unary_expr) => self.collect_structx_in_expr(&unary_expr.expr),
-            Expr::Unsafe(unsafe_expr) => self.collect_structx_in_block(&unsafe_expr.block),
-            Expr::Verbatim(_) => {}
-            Expr::While(while_expr) => {
-                self.collect_structx_in_expr(&while_expr.cond);
-                self.collect_structx_in_block(&while_expr.body);
-            }
-            Expr::Yield(yield_expr) => yield_expr
-                .expr
-                .iter()
-                .for_each(|expr| self.collect_structx_in_expr(&expr)),
-            _ => {}
-        }
-    }
-    fn collect_structx_in_generic_argument(&mut self, arg: &GenericArgument) {
-        match arg {
-            GenericArgument::Type(typ) => self.collect_structx_in_type(typ),
-            GenericArgument::Const(e) => self.collect_structx_in_expr(e),
-            GenericArgument::AssocType(at) => {
-                at.generics.iter().for_each(|gat| {
-                    gat.args
-                        .iter()
-                        .for_each(|arg| self.collect_structx_in_generic_argument(arg))
-                });
-                self.collect_structx_in_type(&at.ty);
-            }
-            GenericArgument::AssocConst(ac) => {
-                ac.generics.iter().for_each(|gat| {
-                    gat.args
-                        .iter()
-                        .for_each(|arg| self.collect_structx_in_generic_argument(arg))
-                });
-                self.collect_structx_in_expr(&ac.value);
-            }
-            GenericArgument::Constraint(_) | GenericArgument::Lifetime(_) => {}
-            _ => {}
-        }
-    }
-    fn collect_structx_in_path_arguments(&mut self, segment: &PathArguments) {
-        match segment {
-            PathArguments::AngleBracketed(generics) => {
-                generics
-                    .args
-                    .iter()
-                    .for_each(|arg| self.collect_structx_in_generic_argument(arg));
-            }
-            PathArguments::Parenthesized(args) => {
-                args.inputs
-                    .iter()
-                    .for_each(|arg| self.collect_structx_in_type(arg));
-                self.collect_structx_in_return_type(&args.output);
-            }
-            PathArguments::None => {}
-        }
-    }
-    fn collect_structx_in_block(&mut self, block: &Block) {
-        block
-            .stmts
-            .iter()
-            .for_each(|stmt| self.collect_structx_in_stmt(stmt));
-    }
-    fn collect_structx_in_path(&mut self, path: &Path) {
-        path.segments
-            .iter()
-            .for_each(|seg| self.collect_structx_in_path_arguments(&seg.arguments));
-    }
     fn collect_structx_in_macro(&mut self, mac: &Macro) {
         static TYPE_MACRO_STR: &'static str = "Structx";
         static MACRO_STR: &'static str = "structx";
@@ -489,101 +275,6 @@ impl<'a> StructXCollector<'a> {
             }
         }
         // TODO add nested anonymous structs in macros such as vec![]
-    }
-    fn collect_structx_in_return_type(&mut self, ret_type: &ReturnType) {
-        match &ret_type {
-            ReturnType::Default => {}
-            ReturnType::Type(_, typ) => self.collect_structx_in_type(&typ),
-        };
-    }
-    fn collect_structx_in_type(&mut self, typ: &Type) {
-        match typ {
-            Type::Array(arr) => self.collect_structx_in_type(&arr.elem),
-            Type::BareFn(f) => {
-                f.inputs
-                    .iter()
-                    .for_each(|arg| self.collect_structx_in_type(&arg.ty));
-                self.collect_structx_in_return_type(&f.output);
-            }
-            Type::Group(g) => self.collect_structx_in_type(&g.elem),
-            Type::Macro(m) => self.collect_structx_in_macro(&m.mac),
-            Type::Paren(p) => self.collect_structx_in_type(&p.elem),
-            Type::Path(p) => {
-                self.collect_structx_in_path(&p.path);
-            }
-            Type::Ptr(p) => self.collect_structx_in_type(&p.elem),
-            Type::Reference(r) => self.collect_structx_in_type(&r.elem),
-            Type::Slice(s) => self.collect_structx_in_type(&s.elem),
-            Type::Tuple(tt) => {
-                tt.elems
-                    .iter()
-                    .for_each(|typ| self.collect_structx_in_type(typ));
-            }
-            // These types represent leaf types which can't contain any more anonymous struct types
-            Type::Infer(_)
-            | Type::Never(_)
-            | Type::ImplTrait(_)
-            | Type::TraitObject(_)
-            | Type::Verbatim(_) => {}
-            _ => panic!("Unknown type {:?} in structx()! ", typ),
-        }
-    }
-    fn collect_structx_in_pat(&mut self, pat: &Pat) {
-        match pat {
-            Pat::Macro(mp) => {
-                self.collect_structx_in_macro(&mp.mac);
-            }
-            Pat::Or(op) => {
-                op.cases.iter().for_each(|pat| {
-                    self.collect_structx_in_pat(&pat);
-                });
-            }
-            Pat::Path(pp) => {
-                self.collect_structx_in_path(&pp.path);
-            }
-            Pat::Range(rp) => {
-                rp.start
-                    .iter()
-                    .for_each(|s| self.collect_structx_in_expr(&s));
-                rp.end.iter().for_each(|e| self.collect_structx_in_expr(&e));
-            }
-            Pat::Reference(rp) => {
-                self.collect_structx_in_pat(&rp.pat);
-            }
-            Pat::Slice(sp) => {
-                sp.elems.iter().for_each(|pat| {
-                    self.collect_structx_in_pat(pat);
-                });
-            }
-            Pat::Struct(sp) => {
-                sp.fields.iter().for_each(|pat| {
-                    self.collect_structx_in_pat(&pat.pat);
-                });
-            }
-            Pat::Tuple(tp) => {
-                tp.elems.iter().for_each(|pat| {
-                    self.collect_structx_in_pat(pat);
-                });
-            }
-            Pat::TupleStruct(ts) => {
-                ts.elems.iter().for_each(|pat| {
-                    self.collect_structx_in_pat(pat);
-                });
-                self.collect_structx_in_path(&ts.path);
-            }
-            Pat::Type(pat_type) => {
-                self.collect_structx_in_type(&pat_type.ty);
-            }
-            Pat::Ident(ip) => {
-                ip.subpat.iter().for_each(|(_, pat)| {
-                    self.collect_structx_in_pat(&pat);
-                });
-            }
-            Pat::Rest(_) | Pat::Lit(_) => {}
-            Pat::Verbatim(_) | Pat::Wild(_) | _ => {
-                panic!("Nested pattern {:?} not supported by structx()!", pat);
-            }
-        };
     }
     // parse `structx!{}`/`Structx!{}`/`args!{}` in source files.
     fn parse_structx(&mut self, input: TokenStream) {
@@ -598,9 +289,17 @@ impl<'a> StructXCollector<'a> {
         // Look for nested structx macro invocations in every field value
         for value in values {
             match value {
-                FieldValue::Expr(expr) => self.collect_structx_in_expr(&expr),
-                FieldValue::Pat(pat) => self.collect_structx_in_pat(&pat),
-                FieldValue::Type(ty) => self.collect_structx_in_type(&ty),
+                FieldValue::Expr(expr) => {
+                    self.visit_expr(&expr);
+                    //self.collect_structx_in_expr(&expr)
+                }
+                FieldValue::Pat(pat) => {
+                    self.visit_pat(&pat);
+                }
+                FieldValue::Type(ty) => {
+                    self.visit_type(&ty);
+                    //self.collect_structx_in_type(&ty)
+                }
             }
         }
         // Add the struct_name and field_names to the struct map
