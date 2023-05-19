@@ -68,6 +68,14 @@ mod tests {
     }
 
     #[test]
+    fn type_only_anonymous_struct() {
+        type Props<T, T1> = Structx! {
+            items: Vec<Structx!{ name: T }>,
+            products: Vec<Structx! { el: Structx! { field: T1 } }>
+        };
+    }
+
+    #[test]
     fn recursively_nested_anonymous_struct() {
         let model = structx! {
             // nested macros which contain again structx!() is currently not supported
