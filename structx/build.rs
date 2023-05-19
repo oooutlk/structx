@@ -291,14 +291,12 @@ impl<'a> StructXCollector<'a> {
             match value {
                 FieldValue::Expr(expr) => {
                     self.visit_expr(&expr);
-                    //self.collect_structx_in_expr(&expr)
                 }
                 FieldValue::Pat(pat) => {
                     self.visit_pat(&pat);
                 }
                 FieldValue::Type(ty) => {
                     self.visit_type(&ty);
-                    //self.collect_structx_in_type(&ty)
                 }
             }
         }
