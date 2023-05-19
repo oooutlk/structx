@@ -57,15 +57,14 @@ pub fn structx(input: TokenStream) -> TokenStream {
             let specified_exprs = expr_struct.fields.iter().map(|field| &field.expr);
             return quote!({ let mut _rest = #rest; #( _rest.#specified_idents = #specified_exprs; )* _rest }).into();
         } else {
-            let (struct_name, _, _) =
-                join_field_members(expr_struct.fields.iter().map(|field| &field.member));
+            let struct_name = get_struct_name(expr_struct.fields.iter().map(|field| &field.member));
             return wrap_struct_name(&struct_name, input);
         }
     } else {
         let input_pat = wrap_struct_name("structx_", input.clone());
         if let Ok(struct_x) = syn::parse::<StructX>(input_pat) {
-            let (struct_name, _, _) =
-                join_field_members(struct_x.pat.fields.iter().map(|field| &field.member));
+            let struct_name =
+                get_struct_name(struct_x.pat.fields.iter().map(|field| &field.member));
             return wrap_struct_name(&struct_name, input);
         }
     }
@@ -140,9 +139,7 @@ fn join_fields(
     )
 }
 
-fn join_field_members<'a>(
-    members: impl Iterator<Item = &'a Member>,
-) -> (String, Vec<Ident>, Vec<Option<Type>>) {
+fn get_struct_name<'a>(members: impl Iterator<Item = &'a Member>) -> String {
     join_fields(
         members
             .map(|member| {
@@ -154,6 +151,7 @@ fn join_field_members<'a>(
             })
             .zip((0..).map(|_| None)),
     )
+    .0
 }
 
 struct FnWithNamedArg;
