@@ -68,6 +68,12 @@ mod tests {
     }
 
     #[test]
+    fn structx_inside_other_macros() {
+        let _vs = vec![structx! { lelele: 0 }];
+        let _vsvs = vec![structx! { lalala: vec![structx!{ lelele: 0 }]}];
+    }
+
+    #[test]
     fn type_only_anonymous_struct() {
         #[allow(dead_code)]
         type Props<T, T1> = Structx! {

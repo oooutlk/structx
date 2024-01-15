@@ -4,3 +4,4 @@ members = [
     "structx_derive",
     "structx_test",
 ]
+resolver = "2"

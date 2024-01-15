@@ -220,9 +220,9 @@ fn join_fields(fields: impl Iterator<Item = Ident>) -> (String, Vec<Ident>) {
 
 type StructMap = HashMap<String, Vec<Ident>>;
 
-struct StructXCollector<'a>(&'a mut StructMap);
+struct StructxCollector<'a>(&'a mut StructMap);
 
-impl<'a> Visit<'_> for StructXCollector<'a> {
+impl<'a> Visit<'_> for StructxCollector<'a> {
     fn visit_item_fn(&mut self, item_fn: &ItemFn) {
         visit::visit_item_fn(self, item_fn);
 
@@ -260,7 +260,7 @@ impl<'a> Visit<'_> for StructXCollector<'a> {
     }
 }
 
-impl<'a> StructXCollector<'a> {
+impl<'a> StructxCollector<'a> {
     fn collect_structx_in_macro(&mut self, mac: &Macro) {
         static TYPE_MACRO_STR: &'static str = "Structx";
         static MACRO_STR: &'static str = "structx";
@@ -269,6 +269,35 @@ impl<'a> StructXCollector<'a> {
             let seg = mac.path.segments.first().unwrap();
             if (seg.ident == MACRO_STR || seg.ident == TYPE_MACRO_STR) && seg.arguments.is_none() {
                 self.parse_structx(mac.tokens.clone().into());
+                return;
+            }
+        }
+        self.collect_structx_in_ts(mac.tokens.clone());
+    }
+    fn collect_structx_in_ts(&mut self, input: TokenStream) {
+        let mut tokens = input.into_iter();
+        while let Some(tt) = tokens.next() {
+            match tt {
+                TokenTree::Ident(ident) => {
+                    let name = ident.to_string();
+                    if name == "structx" || name == "Structx" {
+                        if let Some(tt) = tokens.next() {
+                            if let TokenTree::Punct(punct) = tt {
+                                if punct.as_char() == '!' {
+                                    if let Some(tt) = tokens.next() {
+                                        if let TokenTree::Group(group) = tt {
+                                            let inner = group.clone().stream();
+                                            self.collect_structx_in_ts(inner);
+                                            self.parse_structx(group.stream());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                TokenTree::Group(group) => self.collect_structx_in_ts(group.stream()),
+                _ => {}
             }
         }
     }
@@ -308,7 +337,7 @@ impl<'a> StructXCollector<'a> {
 
 fn main() {
     let mut struct_map = StructMap::new();
-    let mut struct_x_collector = StructXCollector(&mut struct_map);
+    let mut structx_collector = StructxCollector(&mut struct_map);
 
     inwelling::collect_downstream(inwelling::Opts {
         watch_manifest: true,
@@ -320,9 +349,11 @@ fn main() {
     .for_each(|package| {
         package.rs_paths.unwrap().into_iter().for_each(|rs_path| {
             let contents = String::from_utf8(fs::read(rs_path.clone()).unwrap()).unwrap();
+            //let token_stream = contents.parse::<TokenStream>().unwrap();
+            //structx_collector.collect_structx_in_ts(token_stream);
             let syntax = syn::parse_file(&contents);
             if let Ok(syntax) = syntax {
-                struct_x_collector.visit_file(&syntax);
+                structx_collector.visit_file(&syntax);
             } // it's better to report compile errors in downstream crates
         })
     });
